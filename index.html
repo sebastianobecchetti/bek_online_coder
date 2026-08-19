@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BEK Online Coder</title>
-<meta name="description" content="Encode 3D Gaussian Splatting .ply files to the .bek format, entirely in your browser.">
+<meta name="description" content="Encode and decode 3D Gaussian Splatting .ply / .bek files, entirely in your browser.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,17 +17,22 @@
   <section class="intro">
     <p>
       Encodes a 3D Gaussian Splatting <code>.ply</code> scene into the compact
-      <code>.bek</code> container &mdash; entirely inside this browser tab.
-      Nothing is uploaded anywhere: the file never leaves your machine.
+      <code>.bek</code> container, or decodes a <code>.bek</code> back to
+      <code>.ply</code> &mdash; entirely inside this browser tab. Nothing is
+      uploaded anywhere: the file never leaves your machine. Direction is
+      detected from the file's own bytes, not its name.
     </p>
     <div class="notice">
-      <strong>Before you load a large scene:</strong>
+      <strong>Before you load a large file:</strong>
       <ul>
         <li>Encoding is CPU-heavy (RVQ / k-means training dominates the time). Expect roughly
           <strong>~5s for 20k splats</strong> up to <strong>several minutes for 1-2M splats</strong>
-          on a modern laptop &mdash; more on slower machines.</li>
-        <li>The whole input <code>.ply</code> and several working copies are held in memory;
-          very large scenes (many hundreds of MB) may exhaust browser tab memory.</li>
+          on a modern laptop &mdash; more on slower machines. Decoding is fast (no k-means):
+          seconds even for large scenes.</li>
+        <li>The whole input file and several working copies (for decode: the full <code>.ply</code>,
+          which materializes every property as a 32-bit float and is typically <strong>15-25&times;</strong>
+          larger than the source <code>.bek</code>) are held in memory; very large files may exhaust
+          browser tab memory.</li>
         <li>Keep this tab open and don't put the computer to sleep while it's running.</li>
         <li>Everything runs locally in a Web Worker &mdash; your scene data is never sent to a server.</li>
       </ul>
@@ -35,13 +40,13 @@
   </section>
 
   <section class="dropzone" id="dropzone" tabindex="0">
-    <p id="dropzone-label">Drop a <code>.ply</code> file here, or click to choose one</p>
-    <input type="file" id="file-input" accept=".ply" hidden>
+    <p id="dropzone-label">Drop a <code>.ply</code> or <code>.bek</code> file here, or click to choose one</p>
+    <input type="file" id="file-input" accept=".ply,.bek" hidden>
   </section>
 
   <details class="advanced">
     <summary>Advanced parameters</summary>
-    <p class="hint">Codec defaults match <code>ply_to_bek</code>'s default operating point. Only change these if you know what you're changing.</p>
+    <p class="hint">Codec defaults match <code>ply_to_bek</code>'s default operating point. Only change these if you know what you're changing. Only used when encoding (<code>.ply</code> &rarr; <code>.bek</code>); decoding has no parameters.</p>
     <div class="grid">
       <label>DC RVQ stages <input type="number" id="opt-dc-stages" min="0" max="8" value="2"></label>
       <label>SH-AC RVQ stages <input type="number" id="opt-sh-stages" min="0" max="8" value="3"></label>
@@ -60,7 +65,7 @@
   <section class="results" id="results" hidden>
     <h2>Done</h2>
     <dl id="stats"></dl>
-    <a id="download-link" download>Download .bek</a>
+    <a id="download-link" download>Download</a>
   </section>
 
   <section class="error" id="error-box" hidden></section>

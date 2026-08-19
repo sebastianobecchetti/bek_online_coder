@@ -30,10 +30,38 @@ themeToggle.addEventListener('click', () => {
 // ---------- file selection ----------
 let selectedFile: File | null = null;
 
-function pickFile(f: File): void {
+// Cheap peek at the first 4 bytes to tell the user up front which direction
+// they're about to run and, for decode, warn about memory before the worker
+// even starts -- the worker re-checks the same magic bytes itself (it's the
+// one that actually has to error out cleanly on neither), this is just for
+// the UI to be honest about what's about to happen.
+async function peekDirection(f: File): Promise<'encode' | 'decode' | 'unknown'> {
+  const head = new Uint8Array(await f.slice(0, 4).arrayBuffer());
+  const text = new TextDecoder('ascii').decode(head);
+  if (text === 'BEK3') return 'decode';
+  if (text.startsWith('ply')) return 'encode';
+  return 'unknown';
+}
+
+async function pickFile(f: File): Promise<void> {
   selectedFile = f;
-  dropzoneLabel.textContent = `${f.name} (${formatBytes(f.size)}) — click to encode`;
-  startEncode();
+  const direction = await peekDirection(f);
+  if (direction === 'unknown') {
+    resultsBox.hidden = true;
+    errorBox.hidden = false;
+    errorBox.textContent = `${f.name}: not a recognized .ply or .bek file (checked the first bytes, not the extension).`;
+    return;
+  }
+  if (direction === 'decode') {
+    // No exact ratio without actually decoding the header -- see README.md
+    // "Garanzia di equivalenza" for why this is deliberately an estimate,
+    // not a computed number: the .ply materializes every property as a
+    // 32-bit float, so it's always much bigger than the .bek it came from.
+    dropzoneLabel.textContent = `${f.name} (${formatBytes(f.size)}) — decoding to .ply (typically 15-25× larger, scene-dependent; the whole result is held in memory before download)…`;
+  } else {
+    dropzoneLabel.textContent = `${f.name} (${formatBytes(f.size)}) — encoding to .bek…`;
+  }
+  startProcess();
 }
 
 dropzone.addEventListener('click', () => fileInput.click());
@@ -75,6 +103,9 @@ function readOptions() {
 // stage's target and snap to it when the real 'done' event for that stage
 // arrives, rather than claim false per-iteration precision.
 const PHASE_WEIGHT = { read: 0.02, sort: 0.03, rvq: 0.85, 'encode-channels': 0.08, container: 0.02 };
+// Decode has no k-means, so no per-stage granularity is worth building --
+// just two roughly-even phases (README.md "Performance": ~4s total either way).
+const DECODE_PHASE_WEIGHT = { decode: 0.7, write: 0.3 };
 let phaseBase = 0; // cumulative fraction completed before the current phase
 let rvqStageBase = 0; // fraction at the start of the current RVQ stage
 let rvqStageSpan = 0; // fraction span of one RVQ stage
@@ -132,6 +163,14 @@ function handleProgress(e: any): void {
       if (e.status === 'start') animateWithinStage(phaseBase, PHASE_WEIGHT.container, 'Writing .bek container…');
       else { cancelAnimationFrame(animHandle); setFill(1, 'Done.'); }
       break;
+    case 'decode':
+      if (e.status === 'start') setFill(phaseBase, 'Decoding .bek…');
+      else { phaseBase += DECODE_PHASE_WEIGHT.decode; setFill(phaseBase, 'Decoded.'); }
+      break;
+    case 'write':
+      if (e.status === 'start') setFill(phaseBase, 'Writing .ply…');
+      else setFill(1, 'Done.');
+      break;
   }
 }
 
@@ -144,7 +183,7 @@ function formatBytes(n: number): string {
   return `${v.toFixed(2)} ${units[i]}`;
 }
 
-function startEncode(): void {
+function startProcess(): void {
   if (!selectedFile) return;
   resultsBox.hidden = true;
   errorBox.hidden = true;
@@ -161,34 +200,42 @@ function startEncode(): void {
     if (msg.type === 'error') {
       progressWrap.hidden = true;
       errorBox.hidden = false;
-      errorBox.textContent = `Encoding failed: ${msg.message}`;
+      errorBox.textContent = `Failed: ${msg.message}`;
       worker.terminate();
       return;
     }
     if (msg.type === 'done') {
       progressWrap.hidden = true;
       resultsBox.hidden = false;
-      const { splatCount, originalBytes, bekBytes, elapsedMs } = msg.stats;
-      const ratio = originalBytes / bekBytes;
-      const bitsPerGaussian = (bekBytes * 8) / splatCount;
+      const { splatCount, inputBytes, outputBytes, elapsedMs } = msg.stats;
       statsList.innerHTML = '';
-      const rows: [string, string][] = [
-        ['Splats', splatCount.toLocaleString()],
-        ['Original size', formatBytes(originalBytes)],
-        ['.bek size', formatBytes(bekBytes)],
-        ['Compression ratio', `${ratio.toFixed(2)}×`],
-        ['Bits per gaussian', bitsPerGaussian.toFixed(2)],
-        ['Time', `${(elapsedMs / 1000).toFixed(1)} s`],
-      ];
+      const rows: [string, string][] = msg.direction === 'encode'
+        ? [
+            ['Splats', splatCount.toLocaleString()],
+            ['Original size', formatBytes(inputBytes)],
+            ['.bek size', formatBytes(outputBytes)],
+            ['Compression ratio', `${(inputBytes / outputBytes).toFixed(2)}×`],
+            ['Bits per gaussian', ((outputBytes * 8) / splatCount).toFixed(2)],
+            ['Time', `${(elapsedMs / 1000).toFixed(1)} s`],
+          ]
+        : [
+            ['Splats', splatCount.toLocaleString()],
+            ['.bek size', formatBytes(inputBytes)],
+            ['.ply size', formatBytes(outputBytes)],
+            ['Expansion', `${(outputBytes / inputBytes).toFixed(2)}×`],
+            ['Time', `${(elapsedMs / 1000).toFixed(1)} s`],
+          ];
       for (const [k, v] of rows) {
         const dt = document.createElement('dt'); dt.textContent = k;
         const dd = document.createElement('dd'); dd.textContent = v;
         statsList.append(dt, dd);
       }
-      const blob = new Blob([msg.bek], { type: 'application/octet-stream' });
+      const blob = new Blob([msg.file], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
       downloadLink.href = url;
-      downloadLink.download = fileName.replace(/\.ply$/i, '') + '.bek';
+      downloadLink.textContent = msg.direction === 'encode' ? 'Download .bek' : 'Download .ply';
+      const stem = fileName.replace(/\.(ply|bek)$/i, '');
+      downloadLink.download = stem + (msg.direction === 'encode' ? '.bek' : '.ply');
       worker.terminate();
     }
   };
@@ -200,6 +247,6 @@ function startEncode(): void {
   };
 
   selectedFile.arrayBuffer().then((buf) => {
-    worker.postMessage({ type: 'encode', buf, fileName, options: readOptions() }, [buf]);
+    worker.postMessage({ type: 'process', buf, fileName, options: readOptions() }, [buf]);
   });
 }

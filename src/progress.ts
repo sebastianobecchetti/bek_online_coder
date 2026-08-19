@@ -7,7 +7,10 @@ export type ProgressEvent =
   | { phase: 'read' | 'container'; status: 'start' | 'done' }
   | { phase: 'sort'; status: 'start' | 'done' }
   | { phase: 'rvq'; status: 'start' | 'done'; stageIndex: number; totalStages: number; maxIters: number }
-  | { phase: 'encode-channels'; status: 'start' | 'done' };
+  | { phase: 'encode-channels'; status: 'start' | 'done' }
+  // Decode direction (.bek -> .ply): no k-means, so no per-stage
+  // granularity is worth reporting -- see README.md "Performance".
+  | { phase: 'decode' | 'write'; status: 'start' | 'done' };
 
 let sink: ((e: ProgressEvent) => void) | null = null;
 

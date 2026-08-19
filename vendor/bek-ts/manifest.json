@@ -8,6 +8,7 @@
     "rvq.ts": "e49390e2aa4f30aa38b9e173159e67fb9e105ad25363fa646b1f7a10af8a83aa",
     "rangecoder.ts": "67ef88b2a3a2b7bc870c643edddb90f1ae7aa1d13860126351d9dd8481e4dfc6",
     "encode.ts": "8ddd7a63449a9f5955da44acf84f46029671415293436383aacc38e379a0400f",
-    "container.ts": "d73f31bd657e594f035997bc6797dafef8f43a0011bff10748ebbcd959310dc7"
+    "container.ts": "d73f31bd657e594f035997bc6797dafef8f43a0011bff10748ebbcd959310dc7",
+    "decode.ts": "a21bd7c6de164648444f1106f38e987a0049fef52ea9baf4470eabc9fff38652"
   }
 }

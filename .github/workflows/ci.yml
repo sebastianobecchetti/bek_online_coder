@@ -29,4 +29,5 @@ jobs:
       - run: npm run build
       - run: npm run verify:vendor
       - run: npm run verify:bundle
-      - run: echo "SKIP: Anello 2 (bek_to_ply decode-diff) needs ../bek-ts and a local C++ build; run 'npm run verify' locally for the full three-ring check."
+      - run: |
+          echo "SKIP: Anello 2 (bek_to_ply decode-diff) needs ../bek-ts and a local C++ build; run 'npm run verify' locally for the full three-ring check."

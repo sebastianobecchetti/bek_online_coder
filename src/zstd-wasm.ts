@@ -68,7 +68,15 @@ export function zstdCompressSync(data: Uint8Array, opts?: { params?: Record<numb
   return zstd.compress(data, level);
 }
 
+// bek-ts's container.ts/decode.ts treat this return value as a Buffer
+// (readUInt32LE, subarray, etc.) -- @bokuweb's decompress() returns a plain
+// Uint8Array, so it has to be rewrapped: the global `Buffer` here is
+// Node's real one in the Node build (scripts/build-verify.mjs, no inject
+// needed) and src/buffer-polyfill.ts's Buf in the browser build (injected
+// by esbuild.config.mjs into every module in the bundle).
+declare const Buffer: { from(data: Uint8Array): Uint8Array };
+
 export function zstdDecompressSync(data: Uint8Array): Uint8Array {
   if (!zstd) throw new Error('zstd-wasm: initZstd() was not awaited before decompressing');
-  return zstd.decompress(data);
+  return Buffer.from(zstd.decompress(data));
 }

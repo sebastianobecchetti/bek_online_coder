@@ -23,6 +23,7 @@ interface WebpModule {
   _malloc(n: number): number;
   _free(p: number): void;
   _webp_encode_lossless_rgba(rgba: number, w: number, h: number, stride: number, outBufPtr: number, outSizePtr: number): number;
+  _webp_decode_rgba(data: number, dataSize: number, outBufPtr: number, outWidthPtr: number, outHeightPtr: number): number;
   _webp_free(p: number): void;
   HEAPU8: Uint8Array;
   HEAPU32: Uint32Array;
@@ -72,5 +73,45 @@ export function webpEncode(data: Uint8Array, W: number, H: number, ch: 1 | 3): U
     mod._free(inPtr);
     mod._free(outPtrPtr);
     mod._free(outSizePtr);
+  }
+}
+
+// Mirrors bek-ts/src/webp.ts's webpDecode: decodes `blob` (a lossless WebP
+// image) to RGBA, then unpacks exactly `n` bytes of the unpadded plane --
+// ch===1 takes the R byte of each pixel (the plane was replicated onto
+// R/G/B/A=255 on encode), ch===3 takes RGB and drops alpha, both discarding
+// the W*H*ch - n zero padding tail bek_to_ply.cpp itself discards.
+export function webpDecode(blob: Uint8Array, n: number, W: number, H: number, ch: 1 | 3): Uint8Array {
+  if (!mod) throw new Error('webp-wasm: initWebp() was not awaited before decoding');
+  const inPtr = mod._malloc(blob.length);
+  const outPtrPtr = mod._malloc(4);
+  const widthPtr = mod._malloc(4);
+  const heightPtr = mod._malloc(4);
+  try {
+    mod.HEAPU8.set(blob, inPtr);
+    const ok = mod._webp_decode_rgba(inPtr, blob.length, outPtrPtr, widthPtr, heightPtr);
+    if (!ok) throw new Error('webp-wasm: WebPDecodeRGBA failed');
+    const outPtr = mod.HEAPU32[outPtrPtr >> 2];
+    const w = mod.HEAPU32[widthPtr >> 2];
+    const h = mod.HEAPU32[heightPtr >> 2];
+    if (w !== W || h !== H) {
+      throw new Error(`webp-wasm: dimension mismatch ${w}x${h} vs expected ${W}x${H}`);
+    }
+    const rgba = mod.HEAPU8.subarray(outPtr, outPtr + w * h * 4);
+    const out = new Uint8Array(n);
+    if (ch === 1) {
+      for (let k = 0; k < n; k++) out[k] = rgba[k * 4];
+    } else {
+      for (let k = 0; k < n / 3; k++) {
+        out[k * 3] = rgba[k * 4]; out[k * 3 + 1] = rgba[k * 4 + 1]; out[k * 3 + 2] = rgba[k * 4 + 2];
+      }
+    }
+    mod._webp_free(outPtr);
+    return out;
+  } finally {
+    mod._free(inPtr);
+    mod._free(outPtrPtr);
+    mod._free(widthPtr);
+    mod._free(heightPtr);
   }
 }

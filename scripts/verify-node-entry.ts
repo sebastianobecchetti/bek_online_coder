@@ -10,14 +10,22 @@
 //     decoder produces from a reference .bek -- built by bek-ts's own CLI
 //     (real cwebp + real node:zlib zstd), which is the pipeline already
 //     proven L1-equivalent to the C++ encoder (see ../bek-ts/README.md
-//     "Equivalence level reached"). This step needs both repos' binaries,
-//     so it's skipped (not silently passed) when they aren't reachable --
-//     e.g. always in CI.
+//     "Equivalence level reached").
+//  3. Anello 4: the DECODE direction. Takes a .bek produced by the real
+//     C++ encoder (build/ply_to_bek on the same tiny.ply), decodes it with
+//     this project's own browser code path (decode.ts + webp-wasm decode +
+//     zstd-wasm decode), and diffs the resulting .ply byte-for-byte against
+//     build/bek_to_ply decoding that exact same .bek. No tolerance: decode
+//     never re-runs k-means, so there's no -ffast-math rounding question --
+//     either the bytes match or there's a decoder bug.
+// All three of these need both repos' binaries, so they're skipped (not
+// silently passed) when unreachable -- e.g. always in CI.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { readPlyFromArrayBuffer } from '../src/ply-browser.ts';
+import { readPlyFromArrayBuffer, writePlyToArrayBuffer } from '../src/ply-browser.ts';
 import { buildUncompressed } from '../vendor/bek-ts/src/encode.ts';
 import { writeBek } from '../vendor/bek-ts/src/container.ts';
+import { decode } from '../vendor/bek-ts/src/decode.ts';
 import { initWebp } from '../src/webp-wasm.ts';
 import { initZstd } from '../src/zstd-wasm.ts';
 
@@ -88,6 +96,48 @@ if (!existsSync(bekToPly)) {
     console.log(`first differing byte offset: ${firstDiff}`);
   }
   identical = identical && plyIdentical;
+}
+
+// --- Anello 4: decode direction, C++-produced .bek -> page decode vs bek_to_ply ---
+const plyToBek = process.env.PLY_TO_BEK
+  ?? '/Users/sebastianobecchetti/dev/Python/3DGS-Compression-C++/build/ply_to_bek';
+
+if (!existsSync(bekToPly)) {
+  console.log(`SKIP: Anello 4 (decode direction) -- ${bekToPly} not found (needs the C++ build; not available in CI)`);
+} else if (!existsSync(plyToBek)) {
+  console.log(`SKIP: Anello 4 (decode direction) -- ${plyToBek} not found (needs the C++ build; not available in CI)`);
+} else if (!existsSync(plyPath)) {
+  console.log(`SKIP: Anello 4 (decode direction) -- ${plyPath} not found (sibling checkout needed; not available in CI)`);
+} else {
+  const cppBekPath = 'scratch-verify/tiny_cpp.bek';
+  const cppPlyByCppPath = 'scratch-verify/tiny_cpp_decoded_by_cpp.ply';
+  const cppPlyByPagePath = 'scratch-verify/tiny_cpp_decoded_by_page.ply';
+
+  // 1. A .bek from the real C++ encoder (not this project's TS port).
+  execFileSync(plyToBek, [plyPath, cppBekPath], { stdio: 'inherit' });
+  // 2. Decoded by the real C++ decoder.
+  execFileSync(bekToPly, [cppBekPath, cppPlyByCppPath], { stdio: 'inherit' });
+  // 3. Decoded by this project's own browser code path (wasm-webp decode + wasm-zstd decode).
+  const cppBek = readFileSync(cppBekPath);
+  const vd = decode(cppBek);
+  const pagePly = writePlyToArrayBuffer(vd);
+  writeFileSync(cppPlyByPagePath, pagePly);
+
+  const plyByCpp = readFileSync(cppPlyByCppPath);
+  const plyByPage = readFileSync(cppPlyByPagePath);
+  const decodeIdentical = plyByCpp.length === plyByPage.length && plyByCpp.equals(plyByPage);
+  console.log(`bek_to_ply decode of C++ .bek:  ${plyByCpp.length} bytes`);
+  console.log(`this page's decode of same .bek: ${plyByPage.length} bytes`);
+  if (decodeIdentical) {
+    console.log('PASS: Anello 4 -- page-decoded PLY is byte-identical to bek_to_ply decoding the same C++-produced .bek');
+  } else {
+    console.log('FAIL: Anello 4 -- decoded PLYs differ');
+    const n = Math.min(plyByCpp.length, plyByPage.length);
+    let firstDiff = -1;
+    for (let i = 0; i < n; i++) if (plyByCpp[i] !== plyByPage[i]) { firstDiff = i; break; }
+    console.log(`first differing byte offset: ${firstDiff}`);
+  }
+  identical = identical && decodeIdentical;
 }
 
 process.exitCode = identical ? 0 : 1;

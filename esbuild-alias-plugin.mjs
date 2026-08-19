@@ -6,6 +6,9 @@
 //   ./order.ts  -> src/order-progress.ts (adds a sortMorton progress hook)
 //   ./rvq.ts    -> src/rvq-progress.ts   (adds a per-RVQ-stage progress hook)
 //   node:zlib   -> src/zstd-wasm.ts   (real zstd in wasm instead of node:zlib)
+//   ./ply.ts    -> src/ply-shim.ts    (decode.ts's `import { writePly } from './ply.ts'`
+//                                      is fs-based and unused by this project -- see
+//                                      src/ply-shim.ts for why it still has to resolve)
 // These specifier strings are literal in vendor/bek-ts/src/encode.ts and
 // container.ts only; the progress wrapper files themselves import the real
 // vendored modules under a different (relative, non-matching) specifier, so
@@ -20,6 +23,7 @@ const ALIASES = {
   './order.ts': path.join(here, 'src/order-progress.ts'),
   './rvq.ts': path.join(here, 'src/rvq-progress.ts'),
   'node:zlib': path.join(here, 'src/zstd-wasm.ts'),
+  './ply.ts': path.join(here, 'src/ply-shim.ts'),
 };
 
 export const bekAliasPlugin = {

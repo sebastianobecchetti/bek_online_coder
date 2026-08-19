@@ -110,3 +110,54 @@ export function readPlyFromArrayBuffer(buf: ArrayBuffer): VertexData {
     f_rest,
   };
 }
+
+// Browser PLY writer: same binary-little-endian, float32-only, fixed
+// 62-property layout as vendor/bek-ts/src/ply.ts's writePly (mirrors
+// ply_writer.cpp), but returning a Uint8Array instead of writing to
+// node:fs. Used by the decode direction (a loaded .bek -> downloadable
+// .ply). Property order and header text must stay byte-identical to
+// ply.ts's WRITE_PROP_NAMES -- that's the whole point of Anello 4 in
+// scripts/verify-node-entry.ts (bek_to_ply must decode what this project's
+// .bek produces AND this project's decode of a C++ .bek must match
+// bek_to_ply's own PLY output byte-for-byte).
+const WRITE_PROP_NAMES = [
+  'x', 'y', 'z', 'nx', 'ny', 'nz',
+  'f_dc_0', 'f_dc_1', 'f_dc_2',
+  ...Array.from({ length: 45 }, (_, i) => `f_rest_${i}`),
+  'opacity', 'scale_0', 'scale_1', 'scale_2',
+  'rot_0', 'rot_1', 'rot_2', 'rot_3',
+];
+
+export function writePlyToArrayBuffer(data: VertexData): Uint8Array {
+  const n = data.count;
+  let header = 'ply\nformat binary_little_endian 1.0\n';
+  header += `element vertex ${n}\n`;
+  for (const name of WRITE_PROP_NAMES) header += `property float ${name}\n`;
+  header += 'end_header\n';
+  const headerBytes = new TextEncoder().encode(header);
+
+  const stride = WRITE_PROP_NAMES.length * 4;
+  const out = new Uint8Array(headerBytes.length + n * stride);
+  out.set(headerBytes, 0);
+  const dv = new DataView(out.buffer, headerBytes.length);
+
+  const columns: Float32Array[] = [
+    data.x, data.y, data.z,
+    new Float32Array(n), new Float32Array(n), new Float32Array(n), // nx,ny,nz = 0
+    data.f_dc_0, data.f_dc_1, data.f_dc_2,
+    ...data.f_rest,
+    data.opacity,
+    data.scale_0, data.scale_1, data.scale_2,
+    data.rot_0, data.rot_1, data.rot_2, data.rot_3,
+  ];
+
+  for (let p = 0; p < columns.length; p++) {
+    const col = columns[p];
+    const colOffset = p * 4;
+    for (let i = 0; i < n; i++) {
+      dv.setFloat32(i * stride + colOffset, col[i], true);
+    }
+  }
+
+  return out;
+}

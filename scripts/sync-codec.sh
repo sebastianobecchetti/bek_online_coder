@@ -12,11 +12,12 @@ SRC=../bek-ts/src
 DST=vendor/bek-ts/src
 mkdir -p "$DST"
 
-# Only the modules this project actually imports (encode path + types).
-# webp.ts and node:fs-touching ply.ts are intentionally NOT vendored: this
-# project aliases webp.ts to src/webp-wasm.ts and never uses ply.ts's
-# fs-based reader/writer (see src/ply-browser.ts).
-FILES="cbor.ts order.ts quantize.ts rvq.ts rangecoder.ts encode.ts container.ts"
+# Only the modules this project actually imports (encode + decode paths,
+# plus types). webp.ts and node:fs-touching ply.ts are intentionally NOT
+# vendored: this project aliases webp.ts to src/webp-wasm.ts and never uses
+# ply.ts's fs-based reader/writer (see src/ply-browser.ts, which mirrors its
+# layout for both read and write).
+FILES="cbor.ts order.ts quantize.ts rvq.ts rangecoder.ts encode.ts container.ts decode.ts"
 for f in $FILES; do
   cp "$SRC/$f" "$DST/$f"
 done
