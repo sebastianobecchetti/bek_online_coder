@@ -1,4 +1,4 @@
-// Anello 1 of `npm run verify`: the vendored bek-ts snapshot
+// Ring 1 of `npm run verify`: the vendored bek-ts snapshot
 // (vendor/bek-ts/src/*) is not silently stale.
 //
 //  1. Always: every vendored file's sha256 matches vendor/bek-ts/manifest.json

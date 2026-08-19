@@ -54,7 +54,7 @@ async function pickFile(f: File): Promise<void> {
   }
   if (direction === 'decode') {
     // No exact ratio without actually decoding the header -- see README.md
-    // "Garanzia di equivalenza" for why this is deliberately an estimate,
+    // "Equivalence guarantee" for why this is deliberately an estimate,
     // not a computed number: the .ply materializes every property as a
     // 32-bit float, so it's always much bigger than the .bek it came from.
     dropzoneLabel.textContent = `${f.name} (${formatBytes(f.size)}) — decoding to .ply (typically 15-25× larger, scene-dependent; the whole result is held in memory before download)…`;

@@ -116,7 +116,7 @@ export function readPlyFromArrayBuffer(buf: ArrayBuffer): VertexData {
 // ply_writer.cpp), but returning a Uint8Array instead of writing to
 // node:fs. Used by the decode direction (a loaded .bek -> downloadable
 // .ply). Property order and header text must stay byte-identical to
-// ply.ts's WRITE_PROP_NAMES -- that's the whole point of Anello 4 in
+// ply.ts's WRITE_PROP_NAMES -- that's the whole point of Ring 4 in
 // scripts/verify-node-entry.ts (bek_to_ply must decode what this project's
 // .bek produces AND this project's decode of a C++ .bek must match
 // bek_to_ply's own PLY output byte-for-byte).

@@ -1,4 +1,4 @@
-// Anello 3 of `npm run verify`: proves the committed main.js/worker.js were
+// Ring 3 of `npm run verify`: proves the committed main.js/worker.js were
 // actually produced by the committed sources -- rebuilds them (same esbuild
 // options as the real build, see build-site.mjs) into a scratch dir and
 // diffs byte-for-byte against the root main.js/worker.js. esbuild's output

@@ -1,6 +1,6 @@
 // Builds a Node-runnable bundle of the exact same encode path the browser
 // worker uses (wasm-webp + wasm-zstd, via the same esbuild-alias-plugin), for
-// the "run the same new paths under Node" equivalence check (Anello 2 of
+// the "run the same new paths under Node" equivalence check (Ring 2 of
 // `npm run verify`). Output goes to scratch-verify/ (gitignored), never the
 // committed main.js/worker.js at repo root.
 import * as esbuild from 'esbuild';

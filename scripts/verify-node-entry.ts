@@ -1,4 +1,4 @@
-// Anello 2 of `npm run verify`: encodes bek-ts/data/tiny.ply under Node
+// Ring 2 of `npm run verify`: encodes bek-ts/data/tiny.ply under Node
 // using the exact same code path the browser worker uses (wasm-webp +
 // wasm-zstd, via esbuild-alias-plugin.mjs), and checks two things:
 //
@@ -11,7 +11,7 @@
 //     (real cwebp + real node:zlib zstd), which is the pipeline already
 //     proven L1-equivalent to the C++ encoder (see ../bek-ts/README.md
 //     "Equivalence level reached").
-//  3. Anello 4: the DECODE direction. Takes a .bek produced by the real
+//  3. Ring 4: the DECODE direction. Takes a .bek produced by the real
 //     C++ encoder (build/ply_to_bek on the same tiny.ply), decodes it with
 //     this project's own browser code path (decode.ts + webp-wasm decode +
 //     zstd-wasm decode), and diffs the resulting .ply byte-for-byte against
@@ -98,16 +98,16 @@ if (!existsSync(bekToPly)) {
   identical = identical && plyIdentical;
 }
 
-// --- Anello 4: decode direction, C++-produced .bek -> page decode vs bek_to_ply ---
+// --- Ring 4: decode direction, C++-produced .bek -> page decode vs bek_to_ply ---
 const plyToBek = process.env.PLY_TO_BEK
   ?? '/Users/sebastianobecchetti/dev/Python/3DGS-Compression-C++/build/ply_to_bek';
 
 if (!existsSync(bekToPly)) {
-  console.log(`SKIP: Anello 4 (decode direction) -- ${bekToPly} not found (needs the C++ build; not available in CI)`);
+  console.log(`SKIP: Ring 4 (decode direction) -- ${bekToPly} not found (needs the C++ build; not available in CI)`);
 } else if (!existsSync(plyToBek)) {
-  console.log(`SKIP: Anello 4 (decode direction) -- ${plyToBek} not found (needs the C++ build; not available in CI)`);
+  console.log(`SKIP: Ring 4 (decode direction) -- ${plyToBek} not found (needs the C++ build; not available in CI)`);
 } else if (!existsSync(plyPath)) {
-  console.log(`SKIP: Anello 4 (decode direction) -- ${plyPath} not found (sibling checkout needed; not available in CI)`);
+  console.log(`SKIP: Ring 4 (decode direction) -- ${plyPath} not found (sibling checkout needed; not available in CI)`);
 } else {
   const cppBekPath = 'scratch-verify/tiny_cpp.bek';
   const cppPlyByCppPath = 'scratch-verify/tiny_cpp_decoded_by_cpp.ply';
@@ -129,9 +129,9 @@ if (!existsSync(bekToPly)) {
   console.log(`bek_to_ply decode of C++ .bek:  ${plyByCpp.length} bytes`);
   console.log(`this page's decode of same .bek: ${plyByPage.length} bytes`);
   if (decodeIdentical) {
-    console.log('PASS: Anello 4 -- page-decoded PLY is byte-identical to bek_to_ply decoding the same C++-produced .bek');
+    console.log('PASS: Ring 4 -- page-decoded PLY is byte-identical to bek_to_ply decoding the same C++-produced .bek');
   } else {
-    console.log('FAIL: Anello 4 -- decoded PLYs differ');
+    console.log('FAIL: Ring 4 -- decoded PLYs differ');
     const n = Math.min(plyByCpp.length, plyByPage.length);
     let firstDiff = -1;
     for (let i = 0; i < n; i++) if (plyByCpp[i] !== plyByPage[i]) { firstDiff = i; break; }

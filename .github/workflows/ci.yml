@@ -6,8 +6,8 @@ name: CI
 # assets are committed directly instead of built by a deploy job. This
 # workflow's only job is to make sure a broken build or a stale committed
 # bundle can't reach main unnoticed: it builds and runs the two verification
-# rings that don't need a sibling checkout or the C++ binaries (Anello 1's
-# manifest check, Anello 3's bundle-reproducibility check). Anello 2 (the
+# rings that don't need a sibling checkout or the C++ binaries (Ring 1's
+# manifest check, Ring 3's bundle-reproducibility check). Ring 2 (the
 # C++ bek_to_ply decode-diff) needs both ../bek-ts and a local C++ build, so
 # it only ever runs locally via `npm run verify` -- skipped here explicitly,
 # not silently.
@@ -30,4 +30,4 @@ jobs:
       - run: npm run verify:vendor
       - run: npm run verify:bundle
       - run: |
-          echo "SKIP: Anello 2 (bek_to_ply decode-diff) needs ../bek-ts and a local C++ build; run 'npm run verify' locally for the full three-ring check."
+          echo "SKIP: Ring 2 (bek_to_ply decode-diff) needs ../bek-ts and a local C++ build; run 'npm run verify' locally for the full three-ring check."
