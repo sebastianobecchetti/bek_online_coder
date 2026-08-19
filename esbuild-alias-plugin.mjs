@@ -5,7 +5,7 @@
 //   ./webp.ts   -> src/webp-wasm.ts   (wasm libwebp instead of cwebp/dwebp subprocess)
 //   ./order.ts  -> src/order-progress.ts (adds a sortMorton progress hook)
 //   ./rvq.ts    -> src/rvq-progress.ts   (adds a per-RVQ-stage progress hook)
-//   node:zlib   -> src/zstd-raw.ts    (raw-block zstd frame writer instead of node:zlib)
+//   node:zlib   -> src/zstd-wasm.ts   (real zstd in wasm instead of node:zlib)
 // These specifier strings are literal in vendor/bek-ts/src/encode.ts and
 // container.ts only; the progress wrapper files themselves import the real
 // vendored modules under a different (relative, non-matching) specifier, so
@@ -19,7 +19,7 @@ const ALIASES = {
   './webp.ts': path.join(here, 'src/webp-wasm.ts'),
   './order.ts': path.join(here, 'src/order-progress.ts'),
   './rvq.ts': path.join(here, 'src/rvq-progress.ts'),
-  'node:zlib': path.join(here, 'src/zstd-raw.ts'),
+  'node:zlib': path.join(here, 'src/zstd-wasm.ts'),
 };
 
 export const bekAliasPlugin = {

@@ -1,5 +1,4 @@
 node_modules/
-docs/
 *.ply
 *.bek
 .DS_Store

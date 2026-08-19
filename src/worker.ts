@@ -8,6 +8,7 @@ import { readPlyFromArrayBuffer } from './ply-browser.ts';
 import { buildUncompressed, DEFAULT_ENCODE_OPTIONS, type EncodeOptions } from '../vendor/bek-ts/src/encode.ts';
 import { writeBek } from '../vendor/bek-ts/src/container.ts';
 import { initWebp } from './webp-wasm.ts';
+import { initZstd } from './zstd-wasm.ts';
 import { planRvqStages } from './rvq-progress.ts';
 import { setProgressSink, report, type ProgressEvent } from './progress.ts';
 
@@ -18,6 +19,7 @@ self.onmessage = async (ev: MessageEvent) => {
   if (msg.type !== 'encode') return;
   try {
     await initWebp();
+    await initZstd();
 
     const opts: EncodeOptions = { ...DEFAULT_ENCODE_OPTIONS, ...msg.options };
     const rvqStages = opts.dcStages + opts.shStages + (opts.scaleStages > 0 ? opts.scaleStages : 0);

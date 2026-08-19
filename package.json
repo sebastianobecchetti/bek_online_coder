@@ -6,9 +6,13 @@
   "scripts": {
     "build": "node esbuild.config.mjs",
     "build:verify": "node scripts/build-verify.mjs",
-    "verify": "npm run build:verify && node scratch-verify/verify-node-entry.js"
+    "verify:vendor": "node scripts/verify-vendor.mjs",
+    "verify:equivalence": "npm run build:verify && node scratch-verify/verify-node-entry.js",
+    "verify:bundle": "node scripts/verify-bundle.mjs",
+    "verify": "npm run verify:vendor && npm run verify:equivalence && npm run verify:bundle"
   },
   "devDependencies": {
+    "@bokuweb/zstd-wasm": "^0.0.27",
     "esbuild": "^0.24.0"
   },
   "allowScripts": {
