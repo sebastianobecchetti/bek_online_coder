@@ -69,6 +69,19 @@
   </section>
 
   <section class="error" id="error-box" hidden></section>
+
+  <details class="pipeline">
+    <summary>How the codec works</summary>
+    <img src="assets/pipeline-ts.svg" alt="BEK encoding pipeline: each PLY attribute group takes its own quantization path, then each channel is coded with the smallest of five lossless candidates; metadata is serialized as CBOR and the container is compressed with Zstandard into the .bek stream.">
+    <p>
+      Each group of PLY attributes takes its own quantization path; every channel is then
+      coded with whichever lossless candidate comes out smallest. Metadata is serialized as
+      CBOR and the container is compressed with Zstandard. This is the same topology as the
+      reference C++ codec, box for box &mdash; the two boxes outlined in blue are the only
+      ones that differ in implementation, running as WebAssembly here instead of linking
+      native libraries. Decoding is the same graph in reverse.
+    </p>
+  </details>
 </main>
 
 <footer>

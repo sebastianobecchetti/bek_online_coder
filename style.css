@@ -196,3 +196,11 @@ footer {
   font-size: 0.85em;
 }
 footer a { color: inherit; }
+
+/* Collapsible pipeline diagram. The SVG uses neutral greys that read on both
+   themes, so it needs no per-theme treatment -- only room to scroll on narrow
+   viewports, since it is much wider than a phone. */
+.pipeline { margin-top: 2.5rem; overflow-x: auto; }
+.pipeline summary { cursor: pointer; font-weight: 600; }
+.pipeline > img { display: block; width: 100%; min-width: 900px; height: auto; margin: 1rem 0; }
+.pipeline > p { max-width: 62ch; }

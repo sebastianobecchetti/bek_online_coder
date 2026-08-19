@@ -62,6 +62,23 @@ this was developed against. Run `scripts/sync-codec.sh` to refresh it (and
 its manifest, `vendor/bek-ts/manifest.json`) from `../bek-ts` when that
 project changes; nothing in this repo edits those files.
 
+## Pipeline
+
+![BEK encoding pipeline, TypeScript port](assets/pipeline-ts.svg)
+
+Each group of PLY attributes takes its own quantization path; every channel
+is then coded with whichever lossless candidate comes out smallest (WebP,
+LZMA-style range coder, Unary-RC/*posmag* for positions, Packed-RC/*rotpack*
+for rotations, or a raw copy). Metadata is serialized as CBOR and the whole
+container is compressed with Zstandard into the `.bek` stream.
+
+This is the same topology as the C++ codec, box for box &mdash; the port
+reproduces it byte-identically (see [Equivalence guarantee](#equivalence-guarantee)).
+Only two boxes differ in *implementation*: WebP and Zstandard run as
+WebAssembly here instead of linking native libwebp and libzstd. Decoding is
+the same graph in reverse, and is also byte-exact against the C++ decoder.
+Regenerate the figure with `python3 scripts/make-pipeline-figure.py`.
+
 ## Rate-distortion
 
 ![BEK vs. SOG vs. SPZ on room.ply](assets/rd-room.svg)
