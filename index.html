@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BEK Online Coder</title>
+<meta name="description" content="Encode 3D Gaussian Splatting .ply files to the .bek format, entirely in your browser.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>BEK Online Coder</h1>
+  <button id="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
+</header>
+
+<main>
+  <section class="intro">
+    <p>
+      Encodes a 3D Gaussian Splatting <code>.ply</code> scene into the compact
+      <code>.bek</code> container &mdash; entirely inside this browser tab.
+      Nothing is uploaded anywhere: the file never leaves your machine.
+    </p>
+    <div class="notice">
+      <strong>Before you load a large scene:</strong>
+      <ul>
+        <li>Encoding is CPU-heavy (RVQ / k-means training dominates the time). Expect roughly
+          <strong>~5s for 20k splats</strong> up to <strong>several minutes for 1-2M splats</strong>
+          on a modern laptop &mdash; more on slower machines.</li>
+        <li>The whole input <code>.ply</code> and several working copies are held in memory;
+          very large scenes (many hundreds of MB) may exhaust browser tab memory.</li>
+        <li>Keep this tab open and don't put the computer to sleep while it's running.</li>
+        <li>Everything runs locally in a Web Worker &mdash; your scene data is never sent to a server.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="dropzone" id="dropzone" tabindex="0">
+    <p id="dropzone-label">Drop a <code>.ply</code> file here, or click to choose one</p>
+    <input type="file" id="file-input" accept=".ply" hidden>
+  </section>
+
+  <details class="advanced">
+    <summary>Advanced parameters</summary>
+    <p class="hint">Codec defaults match <code>ply_to_bek</code>'s default operating point. Only change these if you know what you're changing.</p>
+    <div class="grid">
+      <label>DC RVQ stages <input type="number" id="opt-dc-stages" min="0" max="8" value="2"></label>
+      <label>SH-AC RVQ stages <input type="number" id="opt-sh-stages" min="0" max="8" value="3"></label>
+      <label>Position fractional bits <input type="number" id="opt-pos-bits" min="1" max="20" value="9"></label>
+      <label>RVQ k-means iterations <input type="number" id="opt-vq-iters" min="1" max="200" value="30"></label>
+      <label>Sort refine window <input type="number" id="opt-sort-refine" min="0" max="4096" value="128"></label>
+      <label>Rotation magnitude bits <input type="number" id="opt-rot-mag-bits" min="2" max="6" value="6"></label>
+    </div>
+  </details>
+
+  <section class="progress-wrap" id="progress-wrap" hidden>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <p id="progress-label">Starting…</p>
+  </section>
+
+  <section class="results" id="results" hidden>
+    <h2>Done</h2>
+    <dl id="stats"></dl>
+    <a id="download-link" download>Download .bek</a>
+  </section>
+
+  <section class="error" id="error-box" hidden></section>
+</main>
+
+<footer>
+  <p>
+    Codec: TypeScript port of the BEK 3D Gaussian Splatting codec. WebP lossless
+    encoding via a vendored WebAssembly build of libwebp from
+    <a href="https://github.com/playcanvas/splat-transform" target="_blank" rel="noopener">PlayCanvas splat-transform</a>
+    (MIT license). No data leaves your browser.
+    <a href="https://github.com/sebastianobecchetti/bek_online_coder" target="_blank" rel="noopener">Source</a>
+  </p>
+</footer>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+:root {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --text: #1a1a1a;
+  --muted: #6b6b6b;
+  --border: #d9d9d6;
+  --accent: #b45309;
+  --accent-fg: #ffffff;
+  --notice-bg: #fff7ed;
+  --notice-border: #fdba74;
+  --error-bg: #fef2f2;
+  --error-border: #fca5a5;
+  --error-text: #991b1b;
+  --code-bg: #eeeeec;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17171a;
+    --surface: #202024;
+    --text: #edeceb;
+    --muted: #9a9a9a;
+    --border: #34343a;
+    --accent: #f0a94c;
+    --accent-fg: #17171a;
+    --notice-bg: #2a2214;
+    --notice-border: #7a5a1f;
+    --error-bg: #2a1616;
+    --error-border: #7a2f2f;
+    --error-text: #f3a5a5;
+    --code-bg: #2a2a30;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #17171a;
+  --surface: #202024;
+  --text: #edeceb;
+  --muted: #9a9a9a;
+  --border: #34343a;
+  --accent: #f0a94c;
+  --accent-fg: #17171a;
+  --notice-bg: #2a2214;
+  --notice-border: #7a5a1f;
+  --error-bg: #2a1616;
+  --error-border: #7a2f2f;
+  --error-text: #f3a5a5;
+  --code-bg: #2a2a30;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 1.25rem 3rem;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 1rem;
+}
+.topbar h1 { font-size: 1.25rem; margin: 0; }
+
+#theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 999px;
+  width: 2.25rem;
+  height: 2.25rem;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+code {
+  background: var(--code-bg);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.notice {
+  background: var(--notice-bg);
+  border: 1px solid var(--notice-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+}
+.notice ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
+.notice li { margin: 0.25rem 0; }
+
+.dropzone {
+  margin-top: 1.5rem;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface);
+}
+.dropzone:hover, .dropzone:focus-visible { border-color: var(--accent); outline: none; }
+.dropzone.dragover { border-color: var(--accent); background: var(--notice-bg); }
+
+.advanced {
+  margin-top: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+}
+.advanced summary { cursor: pointer; font-weight: 600; }
+.advanced .hint { color: var(--muted); font-size: 0.9em; margin: 0.5rem 0; }
+.advanced .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin-top: 0.5rem;
+}
+.advanced label { display: flex; flex-direction: column; font-size: 0.9em; gap: 0.25rem; }
+.advanced input {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.progress-wrap { margin-top: 1.5rem; }
+.progress-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--code-bg);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.2s ease-out;
+}
+#progress-label { color: var(--muted); font-size: 0.9em; margin-top: 0.5rem; }
+
+.results {
+  margin-top: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+#stats { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 1rem; margin: 0 0 1rem; }
+#stats dt { color: var(--muted); }
+#stats dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+#download-link {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--accent-fg);
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.error {
+  margin-top: 1.5rem;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  white-space: pre-wrap;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+}
+
+footer {
+  max-width: 720px;
+  margin: 2rem auto 0;
+  padding: 1rem 1.25rem 2rem;
+  color: var(--muted);
+  font-size: 0.85em;
+}
+footer a { color: inherit; }
