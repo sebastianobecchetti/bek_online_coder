@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: "BEK Online Coder: a browser codec for 3D Gaussian Splatting scenes"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: Becchetti
+    given-names: Sebastiano
+repository-code: "https://github.com/sebastianobecchetti/bek_online_coder"
+url: "https://sebastianobecchetti.github.io/bek_online_coder/"
+abstract: >-
+  A TypeScript conversion of the BEK 3D Gaussian Splatting codec that encodes
+  and decodes scenes entirely in the browser, verified byte-identical to the
+  C++ reference implementation.
+license: MIT
+references:
+  - type: software
+    title: "BEK: a codec for 3D Gaussian Splatting scenes"
+    authors:
+      - family-names: Becchetti
+        given-names: Sebastiano
+    repository-code: "https://github.com/sebastianobecchetti/bek"
