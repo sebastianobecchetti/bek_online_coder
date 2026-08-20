@@ -1,6 +1,6 @@
 # BEK Online Coder
 
-A **TypeScript conversion of the [BEK](../3DGS-Compression-C++) C++ codec**
+A **TypeScript conversion of the [BEK](https://github.com/sebastianobecchetti/bek) C++ codec**
 for 3D Gaussian Splatting compression, running entirely in the browser:
 encodes a `.ply` scene into the compact `.bek` container, or decodes a
 `.bek` back to `.ply`. Nothing is uploaded anywhere &mdash; the file is
@@ -16,12 +16,29 @@ Run `npm run build` and commit the result after any source change; CI
 broken, and `npm run verify` (see below) catches a committed bundle that's
 gone stale relative to its own sources.
 
+## Related repositories
+
+- **[bek](https://github.com/sebastianobecchetti/bek)** &mdash; the reference C++ codec (`ply_to_bek` / `bek_to_ply`),
+  the parameter sweep harness and the BEK Simulation Studio GUI. Every claim of
+  byte-level parity on this page is parity against that implementation.
+- `bek-ts`, the Node port whose sources this repo vendors under
+  `vendor/bek-ts/`, is not published as a repository of its own: the copy here
+  is the public one. References to `../bek-ts` throughout this file mean a local
+  sibling checkout used during development.
+
+## Datasets
+
+All simulations and measurements reported here were run on the scenes
+distributed with
+**[graphdeco-inria/gaussian-splatting](https://github.com/graphdeco-inria/gaussian-splatting)**.
+The scenes are not redistributed in this repository.
+
 ## What this is
 
-A static-site wrapper around [`bek-ts`](../bek-ts), a TypeScript/Node port of
+A static-site wrapper around `bek-ts`, a TypeScript/Node port of
 the BEK codec (encode: `.ply` &rarr; `.bek`; decode: `.bek` &rarr; `.ply`),
 itself a from-scratch conversion of the production C++ codec
-(`../3DGS-Compression-C++`), with two Node-only pieces replaced so it can run
+([`bek`](https://github.com/sebastianobecchetti/bek)), with two Node-only pieces replaced so it can run
 in a browser tab:
 
 - **WebP.** `bek-ts` shells out to Homebrew's `cwebp`/`dwebp`. This project
@@ -85,7 +102,7 @@ Regenerate the figure with `python3 scripts/make-pipeline-figure.py`.
 
 All numbers below are measured on `room.ply` (1.59M Gaussians), the same 5
 render views, PSNR aggregated by averaging MSE and then converting to dB
-(never by averaging dB values). Sources, in `../3DGS-Compression-C++`:
+(never by averaging dB values). Sources, in [`bek`](https://github.com/sebastianobecchetti/bek):
 `room_sweep.csv` (BEK, 216 swept configurations, Pareto frontier extracted
 from it), `room_sog.csv`, `room_spz_real.csv` (SOG and SPZ measured with the
 same render harness and the same 5 views, via `@playcanvas/splat-transform`
