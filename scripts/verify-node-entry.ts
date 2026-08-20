@@ -9,7 +9,7 @@
 //     (build/bek_to_ply), produces a PLY byte-identical to the one that
 //     decoder produces from a reference .bek -- built by bek-ts's own CLI
 //     (real cwebp + real node:zlib zstd), which is the pipeline already
-//     proven L1-equivalent to the C++ encoder (see ../bek-ts/README.md
+//     proven L1-equivalent to the C++ encoder (see bek-ts/README.md
 //     "Equivalence level reached").
 //  3. Ring 4: the DECODE direction. Takes a .bek produced by the real
 //     C++ encoder (build/ply_to_bek on the same tiny.ply), decodes it with
@@ -29,8 +29,8 @@ import { decode } from '../vendor/bek-ts/src/decode.ts';
 import { initWebp } from '../src/webp-wasm.ts';
 import { initZstd } from '../src/zstd-wasm.ts';
 
-const plyPath = process.argv[2] ?? '../bek-ts/data/tiny.ply';
-const refRawPath = process.argv[3] ?? '../bek-ts/test/ref_tiny_strict.raw';
+const plyPath = process.argv[2] ?? 'bek-ts/data/tiny.ply';
+const refRawPath = process.argv[3] ?? 'bek-ts/test/ref_tiny_strict.raw';
 const outBekPath = process.argv[4] ?? 'scratch-verify/tiny.bek';
 const outRawPath = process.argv[5] ?? 'scratch-verify/tiny_new_pipeline.raw';
 
@@ -63,15 +63,17 @@ writeFileSync(outBekPath, bek);
 console.log(`.bek written: ${outBekPath} (${bek.length} bytes)`);
 
 // --- decode-diff step against the C++ reference decoder ---
-const bekToPly = process.env.BEK_TO_PLY
-  ?? '/Users/sebastianobecchetti/dev/Python/3DGS-Compression-C++/build/bek_to_ply';
-const bekTsCli = '../bek-ts/src/cli.ts';
-const bekTsRepo = '../bek-ts';
+// A checkout of https://github.com/sebastianobecchetti/bek with its binaries
+// built (cmake -S . -B build && cmake --build build -j).
+const bekCppRepo = process.env.BEK_CPP_REPO ?? '../bek';
+const bekToPly = process.env.BEK_TO_PLY ?? `${bekCppRepo}/build/bek_to_ply`;
+const bekTsCli = 'bek-ts/src/cli.ts';
+const bekTsRepo = 'bek-ts';
 
 if (!existsSync(bekToPly)) {
   console.log(`SKIP: decode-diff step -- ${bekToPly} not found (needs the C++ build; not available in CI)`);
 } else if (!existsSync(bekTsRepo)) {
-  console.log(`SKIP: decode-diff step -- ${bekTsRepo} not found (sibling checkout needed to build the reference .bek; not available in CI)`);
+  console.log(`SKIP: decode-diff step -- ${bekTsRepo} not found (bek-ts/ sources needed to build the reference .bek)`);
 } else {
   const refBekPath = 'scratch-verify/tiny_ref.bek';
   const refPlyPath = 'scratch-verify/tiny_ref.ply';
@@ -99,15 +101,14 @@ if (!existsSync(bekToPly)) {
 }
 
 // --- Ring 4: decode direction, C++-produced .bek -> page decode vs bek_to_ply ---
-const plyToBek = process.env.PLY_TO_BEK
-  ?? '/Users/sebastianobecchetti/dev/Python/3DGS-Compression-C++/build/ply_to_bek';
+const plyToBek = process.env.PLY_TO_BEK ?? `${bekCppRepo}/build/ply_to_bek`;
 
 if (!existsSync(bekToPly)) {
   console.log(`SKIP: Ring 4 (decode direction) -- ${bekToPly} not found (needs the C++ build; not available in CI)`);
 } else if (!existsSync(plyToBek)) {
   console.log(`SKIP: Ring 4 (decode direction) -- ${plyToBek} not found (needs the C++ build; not available in CI)`);
 } else if (!existsSync(plyPath)) {
-  console.log(`SKIP: Ring 4 (decode direction) -- ${plyPath} not found (sibling checkout needed; not available in CI)`);
+  console.log(`SKIP: Ring 4 (decode direction) -- ${plyPath} not found (bek-ts/data/tiny.ply is gitignored; cut it locally with bek-ts/test/probe_subset.cpp)`);
 } else {
   const cppBekPath = 'scratch-verify/tiny_cpp.bek';
   const cppPlyByCppPath = 'scratch-verify/tiny_cpp_decoded_by_cpp.ply';

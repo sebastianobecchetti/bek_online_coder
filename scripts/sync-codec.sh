@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Re-vendors the bek-ts codec source this project bundles, from the sibling
-# dev checkout at ../bek-ts. Run this manually whenever bek-ts changes and
-# you want this project to pick up the update -- it is NOT run by the build
-# or by CI (CI has no access to ../bek-ts; it only ever sees the committed
-# vendor/bek-ts snapshot). This script only ever copies files OUT of
-# ../bek-ts; it never writes into it.
+# Re-vendors the bek-ts codec source this project bundles, from the port's own
+# sources at bek-ts/ (same repository since the port was folded in here). Run
+# this manually whenever bek-ts/src changes and you want the bundle to pick up
+# the update -- it is NOT run by the build or by CI, which only ever use the
+# committed vendor/bek-ts snapshot. This script only copies files OUT of
+# bek-ts/; it never writes into it.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-SRC=../bek-ts/src
+SRC=bek-ts/src
 DST=vendor/bek-ts/src
 mkdir -p "$DST"
 
@@ -25,7 +25,7 @@ done
 # Anello 1 (npm run verify): a manifest of what SHOULD be in vendor/bek-ts/src
 # right now, so `npm run verify` can catch drift -- either the vendored
 # files getting hand-edited, or this script not being re-run after bek-ts
-# changed -- without needing ../bek-ts to be reachable (CI never has it).
+# changed. The manifest check alone never needs bek-ts/src to be present.
 MANIFEST=vendor/bek-ts/manifest.json
 {
   echo '{'
